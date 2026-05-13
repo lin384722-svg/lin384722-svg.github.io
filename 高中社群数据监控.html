@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>【春12期 & 春11期】高中社群数据监控</title>
+<title>高中社群数据监控</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 
@@ -105,10 +105,387 @@
   .grade-section .time-badge { padding: 2px 5px; font-size: 10px; }
 
 
+
+/* 差值颜色 */
+.diff-up   { color: #2e7d32; font-weight: 600; }
+.diff-down { color: #c62828; font-weight: 600; }
+.diff-zero { color: #999; }
+
+/* 转化表 */
+.conv-table { width:100%; border-collapse:collapse; font-size:11px; }
+.conv-table th { background:#1a73e8; color:white; padding:5px 4px; text-align:center; white-space:nowrap; border:1px solid #1565c0; font-size:11px; }
+.conv-table td { padding:5px 4px; text-align:center; border:1px solid #e8eaed; white-space:nowrap; font-size:11px; }
+.conv-table td.left { text-align:left; font-weight:600; }
+.conv-table tbody tr:hover td { background:#f0f7ff; }
+.conv-table .foot-row td { background:#e8f0fe; font-weight:700; color:#1a73e8; border:1px solid #c5d6f7; }
+.conv-table .zero { color:#ccc; }
+
+/* 每日进量表 */
+.daily-table { width:100%; border-collapse:collapse; font-size:11px; }
+.daily-table th { background:#1a73e8; color:white; padding:5px 4px; text-align:center; white-space:nowrap; border:1px solid #1565c0; }
+.daily-table th.sub-th2 { background:#4a90d9; font-size:10px; }
+.daily-table td { padding:5px 4px; text-align:center; border:1px solid #e8eaed; white-space:nowrap; }
+.daily-table td.left { text-align:left; font-weight:600; }
+.daily-table tbody tr:hover td { background:#f0f7ff; }
+.daily-table tfoot td { background:#e8f0fe; font-weight:700; color:#1a73e8; border:1px solid #c5d6f7; }
+.daily-table .zero { color:#ccc; }
+.daily-table .hot { color:#e53935; font-weight:700; }
 </style>
 </head>
 <body>
 
+<!-- ===== 第一部分：新增维度 ===== -->
+<div class="header">
+  <h1>📊 高中社群数据监控</h1>
+  <p>数据截止：2026-05-13 22:12 &nbsp;|&nbsp; 本周：5/11~5/17 &nbsp;|&nbsp; 上周：5/4~5/10</p>
+</div>
+
+<div class="container">
+
+  <!-- 渠道每日进量监控 -->
+  <div class="section-card">
+    <div class="section-title">渠道每日进量监控（本周 vs 上周同日）</div>
+    <div style="overflow-x:auto">
+      <table class="daily-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="left">渠道</th>
+            <th colspan="2">05月11日<br><small>周一</small></th>
+            <th colspan="2">05月12日<br><small>周二</small></th>
+            <th colspan="2">05月13日<br><small>周三</small></th>
+            <th colspan="2">05月14日<br><small>周四</small><br><small style="color:#ffd">(待更新)</small></th>
+            <th colspan="2">05月15日<br><small>周五</small><br><small style="color:#ffd">(待更新)</small></th>
+            <th colspan="2">05月16日<br><small>周六</small><br><small style="color:#ffd">(待更新)</small></th>
+            <th colspan="2">05月17日<br><small>周日</small><br><small style="color:#ffd">(待更新)</small></th>
+            <th rowspan="2">本周汇总</th>
+            <th rowspan="2">上周汇总</th>
+            <th rowspan="2">周汇总差值</th>
+          </tr>
+          <tr>
+            <th class="sub-th2">进量</th><th class="sub-th2">对比上周</th>
+            <th class="sub-th2">进量</th><th class="sub-th2">对比上周</th>
+            <th class="sub-th2">进量</th><th class="sub-th2">对比上周</th>
+            <th class="sub-th2">进量</th><th class="sub-th2">对比上周</th>
+            <th class="sub-th2">进量</th><th class="sub-th2">对比上周</th>
+            <th class="sub-th2">进量</th><th class="sub-th2">对比上周</th>
+            <th class="sub-th2">进量</th><th class="sub-th2">对比上周</th>
+          </tr>
+        </thead>
+        <tbody><tr>
+    <td class="left">zhuoran</td>
+    <td class="hot">153</td><td class="diff-down">-15</td><td class="hot">175</td><td class="diff-down">-216</td><td>84</td><td class="diff-down">-128</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>412</strong></td>
+    <td><strong>1586</strong></td>
+    <td class="diff-down"><strong>-1174</strong></td>
+  </tr><tr>
+    <td class="left">xuzhiwenxuan</td>
+    <td>89</td><td class="diff-down">-9</td><td class="hot">110</td><td class="diff-down">-191</td><td>28</td><td class="diff-down">-98</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>227</strong></td>
+    <td><strong>1283</strong></td>
+    <td class="diff-down"><strong>-1056</strong></td>
+  </tr><tr>
+    <td class="left">yixiaoyuanmeng</td>
+    <td>73</td><td class="diff-up">+68</td><td>55</td><td class="diff-down">-25</td><td>59</td><td class="diff-up">+27</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>187</strong></td>
+    <td><strong>380</strong></td>
+    <td class="diff-down"><strong>-193</strong></td>
+  </tr><tr>
+    <td class="left">yueyoutushu</td>
+    <td>65</td><td class="diff-down">-8</td><td>61</td><td class="diff-down">-100</td><td>38</td><td class="diff-down">-15</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>164</strong></td>
+    <td><strong>664</strong></td>
+    <td class="diff-down"><strong>-500</strong></td>
+  </tr><tr>
+    <td class="left">qingbeitaifang</td>
+    <td>41</td><td class="diff-up">+18</td><td>79</td><td class="diff-down">-17</td><td>22</td><td class="diff-up">+12</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>142</strong></td>
+    <td><strong>314</strong></td>
+    <td class="diff-down"><strong>-172</strong></td>
+  </tr><tr>
+    <td class="left">lingge</td>
+    <td>27</td><td class="diff-down">-26</td><td>54</td><td class="diff-down">-66</td><td>21</td><td class="diff-up">+10</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>102</strong></td>
+    <td><strong>436</strong></td>
+    <td class="diff-down"><strong>-334</strong></td>
+  </tr><tr>
+    <td class="left">tiankongzhicheng</td>
+    <td>13</td><td class="diff-down">-1</td><td>55</td><td class="diff-up">+18</td><td>11</td><td class="diff-down">-15</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>79</strong></td>
+    <td><strong>191</strong></td>
+    <td class="diff-down"><strong>-112</strong></td>
+  </tr><tr>
+    <td class="left">yingxue</td>
+    <td class="zero">-</td><td class="diff-down">-49</td><td class="zero">-</td><td class="diff-down">-90</td><td>41</td><td class="diff-down">-47</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>41</strong></td>
+    <td><strong>446</strong></td>
+    <td class="diff-down"><strong>-405</strong></td>
+  </tr><tr>
+    <td class="left">zhihuilingdong</td>
+    <td>9</td><td class="diff-up">+8</td><td>9</td><td class="diff-down">-1</td><td>1</td><td class="diff-up">+1</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>19</strong></td>
+    <td><strong>41</strong></td>
+    <td class="diff-down"><strong>-22</strong></td>
+  </tr><tr>
+    <td class="left">quanyouneng</td>
+    <td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="diff-down">-48</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td><td class="zero">-</td>
+    <td><strong>-</strong></td>
+    <td><strong>411</strong></td>
+    <td class="diff-down"><strong>-411</strong></td>
+  </tr></tbody>
+        <tfoot>
+          <tr>
+            <td class="left">合计</td>
+            <td>470</td><td class="diff-down">-14</td><td>598</td><td class="diff-down">-688</td><td>305</td><td class="diff-down">-301</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+            <td><strong>1373</strong></td>
+            <td><strong>5752</strong></td>
+            <td class="diff-down"><strong>-4379</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-top:8px;">* 对比上周同日差值 = 今日进量 - 上周同日进量；5/14-5/17 数据待更新</p>
+  </div>
+
+  <!-- 春11期转化情况 -->
+  <div class="section-card">
+    <div class="section-title">【春11期】各渠道转化情况</div>
+    <div style="overflow-x:auto">
+      <table class="conv-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="left">渠道</th>
+            <th rowspan="2">进班</th>
+            <th colspan="2">加微</th>
+            <th colspan="2">主动加微</th>
+            <th colspan="2">到课</th>
+            <th colspan="2">完课</th>
+            <th rowspan="2">转化人头</th>
+            <th rowspan="2">人头转率</th>
+            <th rowspan="2">到课转化率</th>
+            <th rowspan="2">完课转化率</th>
+            <th rowspan="2">首转GMV</th>
+            <th rowspan="2">总例产</th>
+          </tr>
+          <tr>
+            <th class="sub-th">数量</th><th class="sub-th">率</th>
+            <th class="sub-th">数量</th><th class="sub-th">率</th>
+            <th class="sub-th">数量</th><th class="sub-th">率</th>
+            <th class="sub-th">数量</th><th class="sub-th">率</th>
+          </tr>
+        </thead>
+        <tbody><tr>
+    <td class="left">zhuoran</td>
+    <td>1,972</td>
+    <td>1,548</td>
+    <td>78.5%</td>
+    <td>1,434</td>
+    <td>72.7%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>6</td>
+    <td>0.3%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>¥71,680</td>
+    <td>¥36.3</td>
+  </tr><tr>
+    <td class="left">xuzhiwenxuan</td>
+    <td>1,535</td>
+    <td>1,371</td>
+    <td>89.3%</td>
+    <td>1,343</td>
+    <td>87.5%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr><tr>
+    <td class="left">yueyoutushu</td>
+    <td>814</td>
+    <td>672</td>
+    <td>82.6%</td>
+    <td>641</td>
+    <td>78.7%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>4</td>
+    <td>0.5%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>¥53,160</td>
+    <td>¥65.3</td>
+  </tr><tr>
+    <td class="left">lingge</td>
+    <td>530</td>
+    <td>484</td>
+    <td>91.3%</td>
+    <td>476</td>
+    <td>89.8%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr><tr>
+    <td class="left">yingxue</td>
+    <td>502</td>
+    <td>441</td>
+    <td>87.8%</td>
+    <td>430</td>
+    <td>85.7%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr><tr>
+    <td class="left">yixiaoyuanmeng</td>
+    <td>469</td>
+    <td>405</td>
+    <td>86.4%</td>
+    <td>394</td>
+    <td>84.0%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr><tr>
+    <td class="left">quanyouneng</td>
+    <td>412</td>
+    <td>385</td>
+    <td>93.4%</td>
+    <td>379</td>
+    <td>92.0%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>2</td>
+    <td>0.5%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>¥23,700</td>
+    <td>¥57.5</td>
+  </tr><tr>
+    <td class="left">qingbeitaifang</td>
+    <td>376</td>
+    <td>361</td>
+    <td>96.0%</td>
+    <td>359</td>
+    <td>95.5%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr><tr>
+    <td class="left">tiankongzhicheng</td>
+    <td>218</td>
+    <td>214</td>
+    <td>98.2%</td>
+    <td>209</td>
+    <td>95.9%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>2</td>
+    <td>0.9%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>¥23,100</td>
+    <td>¥106.0</td>
+  </tr><tr>
+    <td class="left">zhihuilingdong</td>
+    <td>59</td>
+    <td>44</td>
+    <td>74.6%</td>
+    <td>39</td>
+    <td>66.1%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr><tr>
+    <td class="left">shengxuebanggz</td>
+    <td>2</td>
+    <td>2</td>
+    <td>100.0%</td>
+    <td>2</td>
+    <td>100.0%</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+    <td>-</td>
+  </tr><tr class="foot-row">
+  <td class="left">合计/均值</td>
+  <td><strong>6,889</strong></td>
+  <td><strong>5,927</strong></td>
+  <td>86.0%</td>
+  <td><strong>5,706</strong></td>
+  <td>82.8%</td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td>-</td>
+  <td><strong>14</strong></td>
+  <td>0.2%</td>
+  <td>-</td><td>-</td>
+  <td><strong>¥171,640</strong></td>
+  <td><strong>¥24.9</strong></td>
+</tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div style="height:20px;background:#f0f2f5;"></div>
+
+<!-- ===== 第二部分：原有进班监控 ===== -->
 <div class="header">
   <h1>📊 【春12期】进班量分析报告</h1>
   <p>数据周期：2026-05-11 ～ 2026-05-13 &nbsp;|&nbsp; 进量周期：2026-05-13 17:00 ~ 2026-05-20 17:00 &nbsp;|&nbsp; 渠道数：10</p>
