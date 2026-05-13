@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【春11期 & 春12期】进班量分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; font-size: 13px; }
+  .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 20px 32px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .header p { font-size: 13px; opacity: 0.85; }
+  .container { max-width: 1600px; margin: 0 auto; padding: 16px 16px; }
+
+  /* KPI */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi-card { background: white; border-radius: 10px; padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+  .kpi-card .label { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .kpi-card .value { font-size: 26px; font-weight: 700; color: #1a73e8; line-height: 1.2; }
+  .kpi-card .sub { font-size: 11px; color: #aaa; margin-top: 3px; }
+
+  /* Section */
+  .section-card { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06); margin-bottom: 14px; }
+  .section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #222; display: flex; align-items: center; gap: 8px; }
+  .section-title::before { content: ''; display: inline-block; width: 4px; height: 16px; background: #1a73e8; border-radius: 2px; }
+
+  /* Monitor table */
+  .mon-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .mon-table th { background: #1a73e8; color: white; font-weight: 600; padding: 7px 8px; text-align: center; white-space: nowrap; border: 1px solid #1565c0; }
+  .mon-table th.sub-th { background: #4a90d9; font-size: 11px; font-weight: 500; }
+  .mon-table th.left { text-align: left; }
+  .mon-table td { padding: 7px 8px; text-align: center; border: 1px solid #e8eaed; white-space: nowrap; }
+  .mon-table td.left { text-align: left; font-weight: 600; }
+  .mon-table tbody tr:hover td { background: #f0f7ff; }
+  .mon-table tfoot td { background: #e8f0fe; font-weight: 700; color: #1a73e8; border: 1px solid #c5d6f7; }
+  .mon-table tfoot td.left { text-align: left; }
+  .mon-table .zero { color: #ccc; }
+  .mon-table .hot { color: #e53935; font-weight: 700; }
+
+  /* Progress */
+  .prog-wrap { display: flex; align-items: center; gap: 5px; justify-content: center; }
+  .prog-bar { width: 52px; height: 7px; background: #e0e0e0; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .prog-fill { height: 100%; border-radius: 3px; }
+  .c-green { background: #43a047; }
+  .c-red   { background: #e53935; }
+  .c-blue  { background: #1a73e8; }
+  .t-green { color: #2e7d32; font-weight: 700; }
+  .t-red   { color: #c62828; font-weight: 700; }
+  .t-blue  { color: #1a73e8; font-weight: 700; }
+
+  /* Time badge */
+  .time-badge { background: #1a73e8; color: white; border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 700; }
+
+  /* Alert box */
+  .alert-box { border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; }
+  .alert-box.warn { background: #fff8e1; border-left: 4px solid #f9a825; }
+  .alert-box.danger { background: #ffebee; border-left: 4px solid #e53935; }
+  .alert-box .alert-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+  .alert-box ul { padding-left: 16px; }
+  .alert-box li { font-size: 12px; line-height: 1.8; color: #555; }
+  .alert-box li span.tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 4px; }
+  .tag-green { background: #e8f5e9; color: #2e7d32; }
+  .tag-red   { background: #ffebee; color: #c62828; }
+
+  /* Charts row */
+  .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .chart-card { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+  .chart-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #444; }
+  .chart-wrap { position: relative; height: 240px; }
+
+  /* Channel tabs */
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .tab { padding: 5px 14px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1.5px solid #ddd; background: white; color: #555; transition: all .15s; white-space: nowrap; }
+  .tab.active, .tab:hover { background: #1a73e8; color: white; border-color: #1a73e8; }
+  .channel-detail { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06); display: none; margin-bottom: 14px; }
+  .channel-detail.active { display: block; }
+
+  /* Detail table */
+  .det-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .det-table th { background: #f0f4ff; padding: 8px 10px; text-align: center; font-weight: 600; color: #555; border-bottom: 2px solid #c5d6f7; white-space: nowrap; }
+  .det-table th:first-child { text-align: left; }
+  .det-table td { padding: 7px 10px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+  .det-table td:first-child { text-align: left; font-weight: 600; }
+  .det-table tr:hover td { background: #f0f7ff; }
+  .det-table .tot-row td { background: #e8f0fe; font-weight: 700; color: #1a73e8; border-top: 2px solid #c5d6f7; }
+  .det-table .zero { color: #ccc; }
+  .det-table .hi { color: #e53935; font-weight: 700; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; color: #333; }
+
+  @media (max-width: 1000px) {
+    .kpi-row { grid-template-columns: repeat(3,1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+
+  /* 年级监控表 - 紧凑模式 */
+  .grade-section { overflow-x: auto; }
+  .grade-section .mon-table { font-size: 10px; }
+  .grade-section .mon-table th { padding: 4px 3px; font-size: 10px; line-height: 1.2; }
+  .grade-section .mon-table th.sub-th { font-size: 9px; padding: 3px 2px; }
+  .grade-section .mon-table td { padding: 4px 3px; font-size: 10px; white-space: nowrap; }
+  .grade-section .prog-bar { width: 32px; height: 5px; }
+  .grade-section .prog-wrap { gap: 3px; }
+  .grade-section .time-badge { padding: 2px 5px; font-size: 10px; }
+
+
+
+/* 分隔线 */
+.period-divider {
+  border: none;
+  border-top: 3px solid #1a73e8;
+  margin: 24px 0 8px 0;
+  opacity: 0.3;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📊 【春11期】进班量分析报告</h1>
+  <p>数据周期：2026-05-02 ～ 2026-05-13 &nbsp;|&nbsp; 进量周期：2026-05-05 11:00 ~ 2026-05-13 17:00 &nbsp;|&nbsp; 渠道数：12</p>
+</div>
+<div class="container">
+
+
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="label">总进班量</div>
+      <div class="value">6,894</div>
+      <div class="sub" id="kpiTotalSub">截至 2026-05-13 10:36</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">预估总目标</div>
+      <div class="value">6,265</div>
+      <div class="sub">各渠道预估之和</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">总进度</div>
+      <div class="value" id="kpiProgress_11">--</div>
+      <div class="sub">总进量 / 预估目标</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">⏱ 时间进度</div>
+      <div class="value" id="kpiTime_11">--</div>
+      <div class="sub">5/5 11:00 ~ 5/13 17:00</div>
+    </div>
+  </div>
+
+  <!-- Alert -->
+  <div id="alertBox_11"></div>
+
+  <!-- 渠道进量监控 -->
+  <div class="section-card">
+    <div class="section-title">【春11期】渠道进量监控</div>
+    <div style="overflow-x:auto">
+      <table class="mon-table">
+        <thead>
+          <tr>
+            <th class="left" rowspan="2">渠道名称</th>
+            <th rowspan="2">预估进量</th>
+            <th rowspan="2">总进量</th>
+            <th rowspan="2">总进度</th>
+            <th>5月2日<br><small>星期六</small></th>
+            <th>5月3日<br><small>星期日</small></th>
+            <th>5月4日<br><small>星期一</small></th>
+            <th>5月5日<br><small>星期二</small></th>
+            <th>5月6日<br><small>星期三</small></th>
+            <th>5月7日<br><small>星期四</small></th>
+            <th>5月8日<br><small>星期五</small></th>
+            <th>5月9日<br><small>星期六</small></th>
+            <th>5月10日<br><small>星期日</small></th>
+            <th>5月11日<br><small>星期一</small></th>
+            <th>5月12日<br><small>星期二</small></th>
+            <th>5月13日<br><small>星期三</small></th>
+            <th rowspan="2">时间进度</th>
+          </tr>
+        </thead>
+        <tbody id="monBody_11"></tbody>
+        <tfoot id="monFoot_11"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- 年级进量监控 -->
+  <div class="section-card grade-section">
+    <div class="section-title">【春11期】年级进量监控</div>
+    <div style="overflow-x:auto">
+      <table class="mon-table">
+        <thead>
+          <tr>
+            <th class="left" rowspan="3">年级</th>
+            <th rowspan="3">预估进量</th>
+            <th rowspan="3">总进量</th>
+            <th rowspan="3">占比</th>
+            <th rowspan="3">总进度</th>
+            <th colspan="2">5月2日<br><small>星期六</small></th>
+            <th colspan="2">5月3日<br><small>星期日</small></th>
+            <th colspan="2">5月4日<br><small>星期一</small></th>
+            <th colspan="2">5月5日<br><small>星期二</small></th>
+            <th colspan="2">5月6日<br><small>星期三</small></th>
+            <th colspan="2">5月7日<br><small>星期四</small></th>
+            <th colspan="2">5月8日<br><small>星期五</small></th>
+            <th colspan="2">5月9日<br><small>星期六</small></th>
+            <th colspan="2">5月10日<br><small>星期日</small></th>
+            <th colspan="2">5月11日<br><small>星期一</small></th>
+            <th colspan="2">5月12日<br><small>星期二</small></th>
+            <th colspan="2">5月13日<br><small>星期三</small></th>
+            <th rowspan="3">时间进度</th>
+          </tr>
+          <tr>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+          </tr>
+        </thead>
+        <tbody id="gradeBody_11"></tbody>
+        <tfoot id="gradeFoot_11"></tfoot>
+      </table>
+    </div>
+  </div>
+  <div id="alertBox_12"></div>
+
+  <!-- 渠道进量监控 -->
+  <div class="section-card">
+    <div class="section-title">【春12期】渠道进量监控</div>
+    <div style="overflow-x:auto">
+      <table class="mon-table">
+        <thead>
+          <tr>
+            <th class="left" rowspan="2">渠道名称</th>
+            <th rowspan="2">预估进量</th>
+            <th rowspan="2">总进量</th>
+            <th rowspan="2">总进度</th>
+            <th>05月11日<br><small>星期一</small></th>
+            <th>05月12日<br><small>星期二</small></th>
+            <th>05月13日<br><small>星期三</small></th>
+            <th rowspan="2">时间进度</th>
+          </tr>
+        </thead>
+        <tbody id="monBody_12"></tbody>
+        <tfoot id="monFoot_12"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- 年级进量监控 -->
+  <div class="section-card grade-section">
+    <div class="section-title">【春12期】年级进量监控</div>
+    <div style="overflow-x:auto">
+      <table class="mon-table">
+        <thead>
+          <tr>
+            <th class="left" rowspan="3">年级</th>
+            <th rowspan="3">预估进量</th>
+            <th rowspan="3">总进量</th>
+            <th rowspan="3">占比</th>
+            <th rowspan="3">总进度</th>
+            <th colspan="2">05月11日<br><small>星期一</small></th>
+            <th colspan="2">05月12日<br><small>星期二</small></th>
+            <th colspan="2">05月13日<br><small>星期三</small></th>
+            <th rowspan="3">时间进度</th>
+          </tr>
+          <tr>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            <th class="sub-th">进量</th><th class="sub-th">占比</th>
+          </tr>
+        </thead>
+        <tbody id="gradeBody_12"></tbody>
+        <tfoot id="gradeFoot_12"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Charts -->
+        
+
+
+</div>
+
+<script>
+// ===== 春11期 =====
+
+/* ============ DATA ============ */
+const DATA = {
+  dates: ["2026-05-02","2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-05-07","2026-05-08","2026-05-09","2026-05-10","2026-05-11","2026-05-12","2026-05-13"],
+  allDates: ["2026-05-02","2026-05-03","2026-05-04","2026-05-05","2026-05-06","2026-05-07","2026-05-08","2026-05-09","2026-05-10","2026-05-11","2026-05-12","2026-05-13"],
+  keyEstimate: {"lingge":500,"tiankongzhicheng":150,"xuzhiwenxuan":1500,"yueyoutushu":600,"quanyouneng":300,"zhuoran":1500,"qingbeitaifang":400,"yixiaoyuanmeng":500,"yingxue":400,"zhihuilingdong":100,"shengxuebanggz":0,"qita":315},
+  gradeEstimate: {"10":492,"11":739,"9":5504},
+  result: {"xuzhiwenxuan":{"2026-05-13":{"11":3},"2026-05-12":{"11":23},"2026-05-11":{"9":57,"10":3,"11":14},"2026-05-10":{"9":133,"10":31,"11":47},"2026-05-09":{"9":142,"10":21,"11":21},"2026-05-08":{"9":171,"10":15,"11":12},"2026-05-07":{"9":143,"10":9,"11":13},"2026-05-06":{"9":112,"10":5,"11":9},"2026-05-05":{"9":263,"10":14,"11":24},"2026-05-04":{"9":98},"2026-05-03":{"9":95},"2026-05-02":{"9":60}},"lingge":{"2026-05-13":{"11":1},"2026-05-12":{"11":4},"2026-05-11":{"9":15,"10":2,"11":6},"2026-05-10":{"9":117,"10":18,"11":30},"2026-05-09":{"9":38,"10":17,"11":7},"2026-05-08":{"9":12,"10":1},"2026-05-07":{"9":7,"10":3,"11":2},"2026-05-06":{"9":9,"10":1,"11":1},"2026-05-05":{"9":72,"10":15,"11":33},"2026-05-04":{"9":53},"2026-05-03":{"9":46},"2026-05-02":{"9":21}},"qingbeitaifang":{"2026-05-12":{"11":7},"2026-05-11":{"9":24,"10":2,"11":12},"2026-05-10":{"9":95,"10":16,"11":20},"2026-05-09":{"9":17,"10":18,"11":8},"2026-05-08":{"9":3,"10":4,"11":2},"2026-05-07":{"9":2},"2026-05-06":{"9":9,"11":1},"2026-05-05":{"9":81,"10":6,"11":9},"2026-05-04":{"9":23},"2026-05-03":{"9":11},"2026-05-02":{"9":6}},"zhuoran":{"2026-05-12":{"11":11},"2026-05-11":{"9":138,"10":6,"11":8},"2026-05-10":{"9":287,"10":11,"11":27},"2026-05-09":{"9":162,"10":7,"11":17},"2026-05-08":{"9":84,"10":10,"11":32},"2026-05-07":{"9":158,"10":5,"11":15},"2026-05-06":{"9":197,"10":5,"11":10},"2026-05-05":{"9":359,"10":8,"11":24},"2026-05-04":{"9":168},"2026-05-03":{"9":136},"2026-05-02":{"9":87}},"yixiaoyuanmeng":{"2026-05-12":{"11":5},"2026-05-11":{"9":49,"10":5,"11":17},"2026-05-10":{"9":80,"10":50,"11":30},"2026-05-09":{"9":30,"10":18,"11":10},"2026-05-08":{"9":20,"10":3,"11":8},"2026-05-07":{"9":10,"10":2,"11":2},"2026-05-06":{"9":23,"10":3,"11":6},"2026-05-05":{"9":36,"10":22,"11":22},"2026-05-04":{"9":5},"2026-05-03":{"9":7},"2026-05-02":{"9":6}},"yueyoutushu":{"2026-05-12":{"11":11},"2026-05-11":{"9":45,"10":2,"11":11},"2026-05-10":{"9":98,"10":34,"11":44},"2026-05-09":{"9":77,"10":10,"11":15},"2026-05-08":{"9":44,"10":10,"11":14},"2026-05-07":{"9":23,"10":3,"11":8},"2026-05-06":{"9":43,"10":3,"11":7},"2026-05-05":{"9":109,"10":15,"11":37},"2026-05-04":{"9":73},"2026-05-03":{"9":55},"2026-05-02":{"9":23}},"zhihuilingdong":{"2026-05-12":{"11":4},"2026-05-11":{"9":1,"10":1,"11":5},"2026-05-10":{"9":3,"10":3,"11":8},"2026-05-09":{"9":3,"10":3,"11":5},"2026-05-08":{"9":1,"10":1,"11":1},"2026-05-07":{"9":1,"11":1},"2026-05-05":{"9":2,"10":1,"11":7},"2026-05-04":{"9":1},"2026-05-03":{"9":5},"2026-05-02":{"9":2}},"tiankongzhicheng":{"2026-05-11":{"9":11,"11":2},"2026-05-10":{"9":37,"10":5,"11":9},"2026-05-09":{"9":20,"10":2,"11":3},"2026-05-08":{"9":12,"10":3,"11":1},"2026-05-07":{"9":17,"10":4,"11":1},"2026-05-06":{"9":21,"10":2,"11":3},"2026-05-05":{"9":28,"10":3,"11":6},"2026-05-04":{"9":14},"2026-05-03":{"9":10},"2026-05-02":{"9":4}},"quanyouneng":{"2026-05-10":{"9":114,"10":17,"11":30},"2026-05-09":{"9":37,"10":27,"11":27},"2026-05-08":{"9":41,"10":20,"11":27},"2026-05-07":{"9":7,"10":4,"11":13},"2026-05-06":{"9":33,"10":3,"11":12}},"yingxue":{"2026-05-09":{"9":46,"10":16,"11":10},"2026-05-08":{"9":38,"10":18,"11":6},"2026-05-07":{"9":55,"10":17,"11":13},"2026-05-06":{"9":63,"10":18,"11":7},"2026-05-05":{"9":57,"10":14,"11":19},"2026-05-04":{"9":49},"2026-05-03":{"9":48},"2026-05-02":{"9":8}},"shengxuebanggz":{"2026-05-06":{"11":1},"2026-05-05":{"9":1}},"ceshixinzhu":{"2026-05-04":{"9":1}}}
+};
+
+
+/* ============ 时间进度 ============ */
+const periodStart = new Date('2026-05-05T11:00:00+08:00');
+const periodEnd   = new Date('2026-05-13T17:00:00+08:00');
+const now = new Date();
+const totalMs   = periodEnd - periodStart;
+const elapsedMs = Math.min(Math.max(now - periodStart, 0), totalMs);
+const timePct   = elapsedMs / totalMs;
+const timePctStr = (timePct * 100).toFixed(1) + '%';
+document.getElementById('kpiTime_11').textContent = timePctStr;
+
+/* ============ 辅助函数 ============ */
+function getKeyTotal(k) {
+  let s = 0;
+  DATA.allDates.forEach(d => {
+    const dd = DATA.result[k] && DATA.result[k][d] || {};
+    s += Object.values(dd).reduce((a,b)=>a+b,0);
+  });
+  return s;
+}
+
+function getDayVal(k, d) {
+  const dd = DATA.result[k] && DATA.result[k][d] || {};
+  return Object.values(dd).reduce((a,b)=>a+b,0);
+}
+
+function getGradeDayVal(g, d) {
+  let s = 0;
+  Object.keys(DATA.result).forEach(k => {
+    s += (DATA.result[k][d] && DATA.result[k][d][g]) || 0;
+  });
+  return s;
+}
+
+function getGradeTotal(g) {
+  let s = 0;
+  DATA.allDates.forEach(d => s += getGradeDayVal(g, d));
+  return s;
+}
+
+// 根据进度差决定颜色（已完成≥100%标绿）
+function progressColor(pct) {
+  if (pct >= 1.0) return 'green';
+  const diff = pct - timePct;
+  if (diff >= 0.20) return 'green';
+  if (diff <= -0.20) return 'red';
+  return 'blue';
+}
+
+function makeProgress(pct, est) {
+  if (est <= 0) return '<span style="color:#aaa">-</span>';
+  const p = Math.min(pct * 100, 200);
+  const cls = progressColor(pct);
+  const tcls = 't-' + cls;
+  const fcls = 'c-' + cls;
+  const w = Math.min(pct / (timePct || 0.01) * 50, 100);
+  return `<div class="prog-wrap">
+    <div class="prog-bar"><div class="prog-fill ${fcls}" style="width:${Math.min(p,100)}%"></div></div>
+    <span class="${tcls}">${(pct*100).toFixed(0)}%</span>
+  </div>`;
+}
+
+/* ============ KPI ============ */
+const totalEst = Object.values(DATA.keyEstimate).reduce((a,b)=>a+b,0);
+const allKeyTotals = {};
+Object.keys(DATA.result).forEach(k => { allKeyTotals[k] = getKeyTotal(k); });
+const grandTotal = Object.values(allKeyTotals).reduce((a,b)=>a+b,0);
+document.getElementById('kpiProgress_11').textContent = (grandTotal/totalEst*100).toFixed(1)+'%';
+
+/* ============ 预警 ============ */
+const alertLines = { ahead: [], behind: [] };
+
+// 渠道预警
+Object.keys(DATA.keyEstimate).forEach(k => {
+  const est = DATA.keyEstimate[k];
+  if (est <= 0) return;
+  const total = allKeyTotals[k] || 0;
+  const pct = total / est;
+  const diff = pct - timePct;
+  if (diff >= 0.20) alertLines.ahead.push(`渠道 <strong>${k}</strong>：进度 ${(pct*100).toFixed(0)}%，超时间进度 ${(diff*100).toFixed(0)}% <span class="tag tag-green">超前</span>`);
+  if (diff <= -0.20) alertLines.behind.push(`渠道 <strong>${k}</strong>：进度 ${(pct*100).toFixed(0)}%，落后时间进度 ${(Math.abs(diff)*100).toFixed(0)}% <span class="tag tag-red">滞后</span>`);
+});
+
+// 年级预警
+['9','10','11'].forEach(g => {
+  const est = DATA.gradeEstimate[g];
+  const total = getGradeTotal(g);
+  const pct = total / est;
+  const diff = pct - timePct;
+  const name = g==='9'?'新高一':g==='10'?'新高二':'新高三';
+  if (diff >= 0.20) alertLines.ahead.push(`年级 <strong>${name}</strong>：进度 ${(pct*100).toFixed(0)}%，超时间进度 ${(diff*100).toFixed(0)}% <span class="tag tag-green">超前</span>`);
+  if (diff <= -0.20) alertLines.behind.push(`年级 <strong>${name}</strong>：进度 ${(pct*100).toFixed(0)}%，落后时间进度 ${(Math.abs(diff)*100).toFixed(0)}% <span class="tag tag-red">滞后</span>`);
+});
+
+const alertEl = document.getElementById('alertBox_11');
+if (alertLines.behind.length > 0) {
+  alertEl.innerHTML += `<div class="alert-box danger"><div class="alert-title">🔴 滞后预警（进度低于时间进度 20% 以上）</div><ul>${alertLines.behind.map(l=>`<li>${l}</li>`).join('')}</ul></div>`;
+}
+if (alertLines.ahead.length > 0) {
+  alertEl.innerHTML += `<div class="alert-box warn"><div class="alert-title">🟢 超前提示（进度高于时间进度 20% 以上）</div><ul>${alertLines.ahead.map(l=>`<li>${l}</li>`).join('')}</ul></div>`;
+}
+
+/* ============ 渠道进量监控表 ============ */
+(function() {
+  // 按总进量降序
+  const keys = Object.keys(DATA.keyEstimate).filter(k => (allKeyTotals[k]||0)>0 || (DATA.keyEstimate[k]||0)>0)
+    .sort((a,b) => (allKeyTotals[b]||0) - (allKeyTotals[a]||0));
+
+  const tbody = document.getElementById('monBody_11');
+  const tfoot = document.getElementById('monFoot_11');
+  const allD = DATA.allDates;
+  let footDays = new Array(allD.length).fill(0);
+  let footTotal = 0;
+
+  keys.forEach(k => {
+    const est = DATA.keyEstimate[k] || 0;
+    const total = allKeyTotals[k] || 0;
+    const pct = est > 0 ? total / est : 0;
+    footTotal += total;
+
+    let cells = '';
+    allD.forEach((d, i) => {
+      const v = getDayVal(k, d);
+      footDays[i] += v;
+      const hasFuture = i >= DATA.dates.length;
+      if (hasFuture) {
+        cells += `<td class="zero">-</td>`;
+      } else {
+        cells += v === 0 ? `<td class="zero">-</td>` : `<td${v>=100?' class="hot"':''}>${v}</td>`;
+      }
+    });
+
+    tbody.innerHTML += `<tr>
+      <td class="left">${k}</td>
+      <td>${est > 0 ? est.toLocaleString() : '-'}</td>
+      <td><strong>${total.toLocaleString()}</strong></td>
+      <td>${makeProgress(pct, est)}</td>
+      ${cells}
+      <td><span class="time-badge">${timePctStr}</span></td>
+    </tr>`;
+  });
+
+  // Footer
+  let footCells = '';
+  allD.forEach((d, i) => {
+    const hasFuture = i >= DATA.dates.length;
+    footCells += hasFuture ? `<td>-</td>` : `<td >${footDays[i]>0?footDays[i]:'-'}</td>`;
+  });
+  tfoot.innerHTML = `<tr>
+    <td class="left">总计</td>
+    <td>${totalEst.toLocaleString()}</td>
+    <td><strong>${footTotal.toLocaleString()}</strong></td>
+    <td>${makeProgress(footTotal/totalEst, totalEst)}</td>
+    ${footCells}
+    <td><span class="time-badge">${timePctStr}</span></td>
+  </tr>`;
+})();
+
+/* ============ 年级进量监控表 ============ */
+(function() {
+  const grades = ['9','10','11'];
+  const names = {'9':'新高一','10':'新高二','11':'新高三'};
+  const allD = DATA.allDates;
+  const tbody = document.getElementById('gradeBody_11');
+  const tfoot = document.getElementById('gradeFoot_11');
+  const gradeEst = DATA.gradeEstimate;
+
+  const totalAllGrades = grades.reduce((s,g)=>s+getGradeTotal(g),0);
+  const totalEstGrades = grades.reduce((s,g)=>s+gradeEst[g],0);
+  let footDays = new Array(allD.length).fill(0);
+
+  grades.forEach(g => {
+    const est = gradeEst[g];
+    const total = getGradeTotal(g);
+    const pct = total / est;
+    const sharePct = totalAllGrades > 0 ? (total/totalAllGrades*100).toFixed(0)+'%' : '-';
+
+    let cells = '';
+    allD.forEach((d,i) => {
+      const v = getGradeDayVal(g, d);
+      footDays[i] += v;
+      const hasFuture = i >= DATA.dates.length;
+      // 当天所有年级合计（用于占比）
+      const dayAllGrades = grades.reduce((s,gg) => s + getGradeDayVal(gg, d), 0);
+      const dayPct = dayAllGrades > 0 ? (v / dayAllGrades * 100).toFixed(0) + '%' : '-';
+      if (hasFuture) {
+        cells += `<td class="zero">-</td><td class="zero">-</td>`;
+      } else if (v === 0) {
+        cells += `<td class="zero">-</td><td class="zero">-</td>`;
+      } else {
+        cells += `<td >${v}</td><td  style="color:#888;font-size:11px">${dayPct}</td>`;
+      }
+    });
+
+    tbody.innerHTML += `<tr>
+      <td class="left"><strong>${names[g]}</strong></td>
+      <td>${est.toLocaleString()}</td>
+      <td><strong>${total.toLocaleString()}</strong></td>
+      <td>${sharePct}</td>
+      <td>${makeProgress(pct, est)}</td>
+      ${cells}
+      <td><span class="time-badge">${timePctStr}</span></td>
+    </tr>`;
+  });
+
+  let footCells = '';
+  allD.forEach((d,i) => {
+    const hasFuture = i >= DATA.dates.length;
+    if (hasFuture) {
+      footCells += `<td>-</td><td>-</td>`;
+    } else {
+      footCells += `<td >${footDays[i]>0?footDays[i]:'-'}</td><td  style="color:#1a73e8;font-size:11px">100%</td>`;
+    }
+  });
+  tfoot.innerHTML = `<tr>
+    <td class="left">总计</td>
+    <td>${totalEstGrades.toLocaleString()}</td>
+    <td><strong>${totalAllGrades.toLocaleString()}</strong></td>
+    <td>100%</td>
+    <td>${makeProgress(totalAllGrades/totalEstGrades, totalEstGrades)}</td>
+    ${footCells}
+    <td><span class="time-badge">${timePctStr}</span></td>
+  </tr>`;
+})();
+
+
+</script>
+
+<script>
+// ===== 春12期 =====
+
+const DATA = {
+  dates: ["2026-05-11","2026-05-12","2026-05-13"],
+  allDates: ["2026-05-11","2026-05-12","2026-05-13"],
+  keyEstimate: {"lingge":300,"tiankongzhicheng":200,"xuzhiwenxuan":1000,"yueyoutushu":400,"quanyouneng":300,"zhuoran":1700,"qingbeitaifang":800,"yixiaoyuanmeng":800,"yingxue":450,"zhihuilingdong":100},
+  gradeEstimate: {"9":4450,"10":750,"11":850},
+  result: {"xuzhiwenxuan":{"2026-05-13":{"9":2},"2026-05-12":{"9":79,"10":9},"2026-05-11":{"10":15}},"zhuoran":{"2026-05-13":{"9":11},"2026-05-12":{"9":163,"10":1},"2026-05-11":{"10":1}},"yixiaoyuanmeng":{"2026-05-13":{"9":5},"2026-05-12":{"9":49,"10":2},"2026-05-11":{"10":2}},"lingge":{"2026-05-13":{"9":1,"10":1},"2026-05-12":{"9":49,"10":1},"2026-05-11":{"10":4}},"yueyoutushu":{"2026-05-13":{"9":2},"2026-05-12":{"9":42,"10":8},"2026-05-11":{"10":7}},"tiankongzhicheng":{"2026-05-12":{"9":54,"10":1}},"zhihuilingdong":{"2026-05-12":{"9":3,"10":3},"2026-05-11":{"10":2}},"qingbeitaifang":{"2026-05-12":{"9":67,"10":5},"2026-05-11":{"10":3}}}
+};
+
+const periodStart = new Date('2026-05-13T17:00:00+08:00');
+const periodEnd   = new Date('2026-05-20T17:00:00+08:00');
+const now = new Date();
+const totalMs   = periodEnd - periodStart;
+const elapsedMs = Math.min(Math.max(now - periodStart, 0), totalMs);
+const timePct   = elapsedMs / totalMs;
+const timePctStr = '--';
+document.getElementById('kpiTime_12').textContent = '--';
+
+function getKeyTotal(k) {
+  let s = 0;
+  DATA.allDates.forEach(d => {
+    const dd = DATA.result[k] && DATA.result[k][d] || {};
+    s += Object.values(dd).reduce((a,b)=>a+b,0);
+  });
+  return s;
+}
+function getDayVal(k, d) {
+  const dd = DATA.result[k] && DATA.result[k][d] || {};
+  return Object.values(dd).reduce((a,b)=>a+b,0);
+}
+function getGradeDayVal(g, d) {
+  let s = 0;
+  Object.keys(DATA.result).forEach(k => { s += (DATA.result[k][d] && DATA.result[k][d][g]) || 0; });
+  return s;
+}
+function getGradeTotal(g) {
+  let s = 0;
+  DATA.allDates.forEach(d => s += getGradeDayVal(g, d));
+  return s;
+}
+function progressColor(pct) {
+  if (pct >= 1.0) return 'green';
+  const diff = pct - timePct;
+  if (diff >= 0.20) return 'green';
+  if (diff <= -0.20) return 'red';
+  return 'blue';
+}
+function makeProgress(pct, est) {
+  if (est <= 0) return '<span style="color:#aaa">-</span>';
+  const cls = pct >= 1.0 ? 'green' : 'blue';
+  return `<div class="prog-wrap">
+    <div class="prog-bar"><div class="prog-fill c-${cls}" style="width:${Math.min(pct*100,100)}%"></div></div>
+    <span class="t-${cls}">${(pct*100).toFixed(0)}%</span>
+  </div>`;
+}
+
+const totalEst = Object.values(DATA.keyEstimate).reduce((a,b)=>a+b,0);
+const allKeyTotals = {};
+Object.keys(DATA.result).forEach(k => { allKeyTotals[k] = getKeyTotal(k); });
+// 也计算没有数据的渠道
+Object.keys(DATA.keyEstimate).forEach(k => { if (!allKeyTotals[k]) allKeyTotals[k] = 0; });
+const grandTotal = Object.values(allKeyTotals).reduce((a,b)=>a+b,0);
+document.getElementById('kpiProgress_12').textContent = (grandTotal/totalEst*100).toFixed(1)+'%';
+
+/* 预警暂不显示（进量周期未开始） */
+
+/* 渠道监控表 */
+(function() {
+  const keys = Object.keys(DATA.keyEstimate).sort((a,b) => (allKeyTotals[b]||0) - (allKeyTotals[a]||0));
+  const tbody = document.getElementById('monBody_12');
+  const tfoot = document.getElementById('monFoot_12');
+  const allD = DATA.allDates;
+  let footDays = new Array(allD.length).fill(0);
+  let footTotal = 0;
+  keys.forEach(k => {
+    const est = DATA.keyEstimate[k] || 0;
+    const total = allKeyTotals[k] || 0;
+    const pct = est > 0 ? total / est : 0;
+    footTotal += total;
+    let cells = '';
+    allD.forEach((d, i) => {
+      const v = getDayVal(k, d);
+      footDays[i] += v;
+      cells += v === 0 ? `<td class="zero">-</td>` : `<td${v>=100?' class="hot"':''}>${v}</td>`;
+    });
+    tbody.innerHTML += `<tr>
+      <td class="left">${k}</td>
+      <td>${est > 0 ? est.toLocaleString() : '-'}</td>
+      <td><strong>${total.toLocaleString()}</strong></td>
+      <td>${makeProgress(pct, est)}</td>
+      ${cells}
+      <td><span class="time-badge">${timePctStr}</span></td>
+    </tr>`;
+  });
+  let footCells = allD.map((d,i) => footDays[i]>0 ? `<td>${footDays[i]}</td>` : `<td>-</td>`).join('');
+  tfoot.innerHTML = `<tr>
+    <td class="left">总计</td>
+    <td>${totalEst.toLocaleString()}</td>
+    <td><strong>${footTotal.toLocaleString()}</strong></td>
+    <td>${makeProgress(footTotal/totalEst, totalEst)}</td>
+    ${footCells}
+    <td><span class="time-badge">${timePctStr}</span></td>
+  </tr>`;
+})();
+
+/* 年级监控表 */
+(function() {
+  const grades = ['9','10','11'];
+  const names = {'9':'新高一','10':'新高二','11':'新高三'};
+  const allD = DATA.allDates;
+  const tbody = document.getElementById('gradeBody_12');
+  const tfoot = document.getElementById('gradeFoot_12');
+  const totalAllGrades = grades.reduce((s,g)=>s+getGradeTotal(g),0);
+  const totalEstGrades = grades.reduce((s,g)=>s+DATA.gradeEstimate[g],0);
+  let footDays = new Array(allD.length).fill(0);
+  grades.forEach(g => {
+    const est = DATA.gradeEstimate[g];
+    const total = getGradeTotal(g);
+    const pct = total / est;
+    const sharePct = totalAllGrades > 0 ? (total/totalAllGrades*100).toFixed(0)+'%' : '-';
+    let cells = '';
+    allD.forEach((d,i) => {
+      const v = getGradeDayVal(g, d);
+      footDays[i] += v;
+      const dayAllGrades = grades.reduce((s,gg) => s + getGradeDayVal(gg, d), 0);
+      const dayPct = dayAllGrades > 0 ? (v / dayAllGrades * 100).toFixed(0) + '%' : '-';
+      cells += v === 0 ? `<td class="zero">-</td><td class="zero">-</td>` : `<td>${v}</td><td style="color:#888;font-size:11px">${dayPct}</td>`;
+    });
+    tbody.innerHTML += `<tr>
+      <td class="left"><strong>${names[g]}</strong></td>
+      <td>${est.toLocaleString()}</td>
+      <td><strong>${total.toLocaleString()}</strong></td>
+      <td>${sharePct}</td>
+      <td>${makeProgress(pct, est)}</td>
+      ${cells}
+      <td><span class="time-badge">${timePctStr}</span></td>
+    </tr>`;
+  });
+  let footCells = '';
+  allD.forEach((d,i) => {
+    footCells += `<td>${footDays[i]>0?footDays[i]:'-'}</td><td style="color:#1a73e8;font-size:11px">100%</td>`;
+  });
+  tfoot.innerHTML = `<tr>
+    <td class="left">总计</td>
+    <td>${totalEstGrades.toLocaleString()}</td>
+    <td><strong>${totalAllGrades.toLocaleString()}</strong></td>
+    <td>100%</td>
+    <td>${makeProgress(totalAllGrades/totalEstGrades, totalEstGrades)}</td>
+    ${footCells}
+    <td><span class="time-badge">${timePctStr}</span></td>
+  </tr>`;
+})();
+
+</script>
+
+</body>
+</html>
