@@ -757,10 +757,13 @@ function progressColor(pct) {
 }
 function makeProgress(pct, est) {
   if (est <= 0) return '<span style="color:#aaa">-</span>';
-  const cls = pct >= 1.0 ? 'green' : 'blue';
+  const p = Math.min(pct * 100, 200);
+  const cls = progressColor(pct);
+  const tcls = 't-' + cls;
+  const fcls = 'c-' + cls;
   return `<div class="prog-wrap">
-    <div class="prog-bar"><div class="prog-fill c-${cls}" style="width:${Math.min(pct*100,100)}%"></div></div>
-    <span class="t-${cls}">${(pct*100).toFixed(0)}%</span>
+    <div class="prog-bar"><div class="prog-fill ${fcls}" style="width:${Math.min(p,100)}%"></div></div>
+    <span class="${tcls}">${(pct*100).toFixed(0)}%</span>
   </div>`;
 }
 
