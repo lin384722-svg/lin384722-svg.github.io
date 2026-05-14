@@ -1271,42 +1271,6 @@ if (alertLines.ahead.length > 0) {
 })();
 </script>
 
-<script>
-// 春11期转化表 - 率列低于合计均值标红
-(function(){
-  var table = document.querySelector('.conv-table');
-  if (!table) return;
-  var footRow = table.querySelector('.foot-row');
-  if (!footRow) return;
-  // 合计行: 进班(1), 加微数(2), 加微率(3), 主动加微数(4), 主动加微率(5), 到课数(6), 到课率(7), 完课数(8), 完课率(9), 人头(10), 人头转率(11), 到课转率(12), 完课转率(13), GMV(14), 例产(15)
-  var footCells = footRow.querySelectorAll('td');
-  // 率列索引(0-based): 加微率=2, 主动加微率=4, 人头转率=10
-  var rateCols = [2, 4, 10];
-  var avgVals = {};
-  rateCols.forEach(function(ci){
-    var cell = footCells[ci];
-    if (!cell) return;
-    var txt = cell.textContent.trim().replace('%','');
-    avgVals[ci] = parseFloat(txt) || 0;
-  });
-
-  var bodyRows = table.querySelectorAll('tbody tr:not(.foot-row)');
-  bodyRows.forEach(function(row){
-    var cells = row.querySelectorAll('td');
-    rateCols.forEach(function(ci){
-      var cell = cells[ci];
-      if (!cell) return;
-      var txt = cell.textContent.trim().replace('%','');
-      var val = parseFloat(txt);
-      if (isNaN(val)) return;
-      if (val < avgVals[ci]) {
-        cell.style.color = '#e53935';
-        cell.style.fontWeight = '600';
-      }
-    });
-  });
-})();
-</script>
 
 </body>
 </html>
