@@ -255,7 +255,7 @@
 <!-- ===== 第二部分：原有进班监控 ===== -->
 <div class="header">
   <h1>📊 【春12期】进班量分析报告</h1>
-  <p>数据周期：2026-05-11 ～ 2026-05-13 &nbsp;|&nbsp; 进量周期：2026-05-13 17:00 ~ 2026-05-20 17:00 &nbsp;|&nbsp; 渠道数：10</p>
+  <p>数据周期：2026-05-11 ～ 2026-05-14 &nbsp;|&nbsp; 进量周期：2026-05-13 17:00 ~ 2026-05-20 17:00 &nbsp;|&nbsp; 渠道数：10</p>
 </div>
 <div class="container">
 
@@ -723,8 +723,8 @@ const now = new Date();
 const totalMs   = periodEnd - periodStart;
 const elapsedMs = Math.min(Math.max(now - periodStart, 0), totalMs);
 const timePct   = elapsedMs / totalMs;
-const timePctStr = '--';
-document.getElementById('kpiTime_12').textContent = '--';
+const timePctStr = (timePct * 100).toFixed(1) + '%';
+document.getElementById('kpiTime_12').textContent = timePctStr;
 
 function getKeyTotal(k) {
   let s = 0;
@@ -772,7 +772,24 @@ Object.keys(DATA_12.keyEstimate).forEach(k => { if (!allKeyTotals[k]) allKeyTota
 const grandTotal = Object.values(allKeyTotals).reduce((a,b)=>a+b,0);
 document.getElementById('kpiProgress_12').textContent = (grandTotal/totalEst*100).toFixed(1)+'%';
 
-/* 预警暂不显示（进量周期未开始） */
+/* 预警 */
+const alertLines_12 = { ahead: [], behind: [] };
+Object.keys(DATA_12.keyEstimate).forEach(k => {
+  const est = DATA_12.keyEstimate[k];
+  if (est <= 0) return;
+  const total = allKeyTotals[k] || 0;
+  const pct = total / est;
+  const diff = pct - timePct;
+  if (diff >= 0.20) alertLines_12.ahead.push(`渠道 <strong>${k}</strong>：进度 ${(pct*100).toFixed(0)}%，超时间进度 ${(diff*100).toFixed(0)}% <span class="tag tag-green">超前</span>`);
+  if (diff <= -0.20) alertLines_12.behind.push(`渠道 <strong>${k}</strong>：进度 ${(pct*100).toFixed(0)}%，落后时间进度 ${(Math.abs(diff)*100).toFixed(0)}% <span class="tag tag-red">滞后</span>`);
+});
+const alertEl_12 = document.getElementById('alertBox_12');
+if (alertLines_12.behind.length > 0) {
+  alertEl_12.innerHTML += `<div class="alert-box danger"><div class="alert-title">🔴 滞后预警（进度低于时间进度 20% 以上）</div><ul>${alertLines_12.behind.map(l=>`<li>${l}</li>`).join('')}</ul></div>`;
+}
+if (alertLines_12.ahead.length > 0) {
+  alertEl_12.innerHTML += `<div class="alert-box warn"><div class="alert-title">🟢 超前提示（进度高于时间进度 20% 以上）</div><ul>${alertLines_12.ahead.map(l=>`<li>${l}</li>`).join('')}</ul></div>`;
+}
 
 /* 渠道监控表 */
 (function() {
