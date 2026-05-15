@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>高中图书1元数据监控</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; font-size: 13px; }
@@ -12,14 +13,62 @@
   .header p { font-size: 13px; opacity: 0.85; }
   .container { max-width: 1600px; margin: 0 auto; padding: 16px 16px; }
 
+  /* KPI */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi-card { background: white; border-radius: 10px; padding: 14px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+  .kpi-card .label { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .kpi-card .value { font-size: 26px; font-weight: 700; color: #1a73e8; line-height: 1.2; }
+  .kpi-card .sub { font-size: 11px; color: #aaa; margin-top: 3px; }
+
+  /* Section */
   .section-card { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06); margin-bottom: 14px; }
   .section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #222; display: flex; align-items: center; gap: 8px; }
   .section-title::before { content: ''; display: inline-block; width: 4px; height: 16px; background: #1a73e8; border-radius: 2px; }
 
+  /* Monitor table */
+  .mon-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .mon-table th { background: #1a73e8; color: white; font-weight: 600; padding: 7px 8px; text-align: center; white-space: nowrap; border: 1px solid #1565c0; }
+  .mon-table th.sub-th { background: #4a90d9; font-size: 11px; font-weight: 500; }
+  .mon-table th.left { text-align: left; }
+  .mon-table td { padding: 7px 8px; text-align: center; border: 1px solid #e8eaed; white-space: nowrap; }
+  .mon-table td.left { text-align: left; font-weight: 600; }
+  .mon-table tbody tr:hover td { background: #f0f7ff; }
+  .mon-table tfoot td { background: #e8f0fe; font-weight: 700; color: #1a73e8; border: 1px solid #c5d6f7; }
+  .mon-table tfoot td.left { text-align: left; }
+  .mon-table .zero { color: #ccc; }
+  .mon-table .hot { color: #e53935; font-weight: 700; }
+
+  /* Progress */
+  .prog-wrap { display: flex; align-items: center; gap: 5px; justify-content: center; }
+  .prog-bar { width: 52px; height: 7px; background: #e0e0e0; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .prog-fill { height: 100%; border-radius: 3px; }
+  .c-green { background: #43a047; }
+  .c-red   { background: #e53935; }
+  .c-blue  { background: #1a73e8; }
+  .t-green { color: #2e7d32; font-weight: 700; }
+  .t-red   { color: #c62828; font-weight: 700; }
+  .t-blue  { color: #1a73e8; font-weight: 700; }
+
+  /* Time badge */
+  .time-badge { background: #1a73e8; color: white; border-radius: 6px; padding: 3px 9px; font-size: 12px; font-weight: 700; }
+
+  /* Charts row */
+  .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .chart-card { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 2px 6px rgba(0,0,0,.06); }
+  .chart-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #444; }
+  .chart-wrap { position: relative; height: 240px; }
+
+  @media (max-width: 1000px) {
+    .kpi-row { grid-template-columns: repeat(2,1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+
+  /* 差值颜色 */
   .diff-up   { color: #2e7d32; font-weight: 600; }
   .diff-down { color: #c62828; font-weight: 600; }
   .diff-zero { color: #999; }
 
+  /* 每日进量表 */
   .daily-table { width:100%; border-collapse:collapse; font-size:11px; }
   .daily-table th { background:#1a73e8; color:white; padding:5px 4px; text-align:center; white-space:nowrap; border:1px solid #1565c0; }
   .daily-table th.sub-th2 { background:#4a90d9; font-size:10px; }
@@ -29,6 +78,26 @@
   .daily-table tfoot td { background:#e8f0fe; font-weight:700; color:#1a73e8; border:1px solid #c5d6f7; }
   .daily-table .zero { color:#ccc; }
   .daily-table .hot { color:#222; font-weight:600; }
+
+  /* 转化表 */
+  .conv-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .conv-table th { background:#1a73e8; color:white; padding:5px 4px; text-align:center; white-space:nowrap; border:1px solid #1565c0; font-size:11px; }
+  .conv-table td { padding:5px 4px; text-align:center; border:1px solid #e8eaed; white-space:nowrap; font-size:11px; }
+  .conv-table td.left { text-align:left; font-weight:600; }
+  .conv-table tbody tr:hover td { background:#f0f7ff; }
+  .conv-table .foot-row td { background:#e8f0fe; font-weight:700; color:#1a73e8; border:1px solid #c5d6f7; }
+
+  /* 年级监控表 - 紧凑模式 */
+  .grade-section { overflow-x: auto; }
+  .grade-section .mon-table { font-size: 10px; }
+  .grade-section .mon-table th { padding: 4px 3px; font-size: 10px; line-height: 1.2; }
+  .grade-section .mon-table th.sub-th { font-size: 9px; padding: 3px 2px; }
+  .grade-section .mon-table td { padding: 4px 3px; font-size: 10px; white-space: nowrap; }
+  .grade-section .prog-bar { width: 32px; height: 5px; }
+  .grade-section .prog-wrap { gap: 3px; }
+  .grade-section .time-badge { padding: 2px 5px; font-size: 10px; }
+
+  .placeholder-cell { color: #bbb; font-style: italic; }
 </style>
 </head>
 <body>
@@ -39,7 +108,7 @@
 
 <div class="container">
 
-  <!-- 数据摘要 -->
+  <!-- ===== 数据摘要 ===== -->
   <div class="section-card">
     <div class="section-title">📋 数据摘要</div>
     <div style="line-height:1.9;font-size:13px;color:#333;">
@@ -49,24 +118,58 @@
         进量 <strong>79</strong><span style="color:#2e7d32;font-size:12px;">（+79）</span>，新高一 <strong>33</strong><span style="color:#2e7d32;font-size:12px;">（+33）</span>，新高二 <strong>29</strong><span style="color:#2e7d32;font-size:12px;">（+29）</span>，新高三 <strong>17</strong><span style="color:#2e7d32;font-size:12px;">（+17）</span>。
       </p>
 
+      <p style="margin:0 0 8px;"><span style="color:#1a73e8;font-weight:700;">✅ 期次达成</span></p>
+      <p style="margin:0 0 14px;padding-left:12px;" id="summary-qici">
+        <span class="placeholder-cell">【待更新】目标 -，实时进量 -，达成度 -%</span>
+      </p>
+
+      <p style="margin:0 0 8px;"><span style="color:#1a73e8;font-weight:700;">✅ 转化进度</span></p>
+      <p style="margin:0 0 4px;padding-left:12px;" id="summary-zhuanhua">
+        <span class="placeholder-cell">【待更新】转化数据待填入</span>
+      </p>
+
     </div>
   </div>
 
-  <!-- 渠道每日进量监控 -->
+  <!-- ===== KPI卡片 ===== -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="label">实时进量（累计）</div>
+      <div class="value" id="kpi-total">-</div>
+      <div class="sub">待更新</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">期次目标</div>
+      <div class="value" id="kpi-target">-</div>
+      <div class="sub">待填入</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">达成率</div>
+      <div class="value" id="kpi-rate">-%</div>
+      <div class="sub">待更新</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">渠道数</div>
+      <div class="value">2</div>
+      <div class="sub">ningbohuishuo / guangzhouzhihuicheng</div>
+    </div>
+  </div>
+
+  <!-- ===== 渠道每日进量监控 ===== -->
   <div class="section-card">
     <div class="section-title">渠道每日进量监控（本周 vs 上周）</div>
     <div style="overflow-x:auto">
       <table class="daily-table">
         <thead>
           <tr>
-            <th rowspan="2" class="left">渠道</th>
+            <th rowspan="2" style="text-align:left">渠道</th>
             <th colspan="2">05月11日<br><small>周一</small></th>
             <th colspan="2">05月12日<br><small>周二</small></th>
             <th colspan="2">05月13日<br><small>周三</small></th>
             <th colspan="2">05月14日<br><small>周四</small></th>
-            <th colspan="2">05月15日<br><small>周五</small><br><small style="color:#ffd">(待更新)</small></th>
-            <th colspan="2">05月16日<br><small>周六</small><br><small style="color:#ffd">(待更新)</small></th>
-            <th colspan="2">05月17日<br><small>周日</small><br><small style="color:#ffd">(待更新)</small></th>
+            <th colspan="2">05月15日<br><small>周五</small><br><small style="color:#ffd">（待更新）</small></th>
+            <th colspan="2">05月16日<br><small>周六</small><br><small style="color:#ffd">（待更新）</small></th>
+            <th colspan="2">05月17日<br><small>周日</small><br><small style="color:#ffd">（待更新）</small></th>
             <th rowspan="2">本周汇总</th>
             <th rowspan="2">上周汇总</th>
             <th rowspan="2">周汇总差值</th>
@@ -104,7 +207,7 @@
             <td class="zero">-</td><td class="zero">-</td>
             <td class="zero">-</td><td class="zero">-</td>
             <td class="zero">-</td><td class="zero">-</td>
-            <td><strong>-</strong></td>
+            <td><strong>0</strong></td>
             <td><strong>166</strong></td>
             <td><strong><span class="diff-down">-166</span></strong></td>
           </tr>
@@ -130,7 +233,303 @@
     <p style="font-size:12px;color:#666;margin-top:6px;">数据截止：2026-05-14 24:00 &nbsp;|&nbsp; 本周：5/11~5/17 &nbsp;|&nbsp; 上周：5/4~5/10</p>
   </div>
 
-</div>
+  <div style="height:20px;background:#f0f2f5;"></div>
+
+  <!-- ===== 期次进量分析报告 ===== -->
+  <div class="header" style="margin-top:0;">
+    <h1>📊 【期次】进班量分析报告</h1>
+    <p>进量周期：待填入 &nbsp;|&nbsp; 渠道数：2</p>
+  </div>
+
+  <div class="container">
+
+    <!-- KPI 卡片 -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="label">总进量</div>
+        <div class="value" id="kpi2-total">-</div>
+        <div class="sub">待更新</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">期次目标</div>
+        <div class="value" id="kpi2-target">-</div>
+        <div class="sub">待填入</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">达成率</div>
+        <div class="value" id="kpi2-rate">-%</div>
+        <div class="sub">待更新</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">时间进度</div>
+        <div class="value" id="kpi2-time">-%</div>
+        <div class="sub">待填入</div>
+      </div>
+    </div>
+
+    <!-- 渠道进量监控表 -->
+    <div class="section-card">
+      <div class="section-title">【期次】渠道进量监控</div>
+      <div style="overflow-x:auto">
+        <table class="mon-table">
+          <thead>
+            <tr>
+              <th rowspan="3" class="left">渠道</th>
+              <th rowspan="3">目标</th>
+              <!-- 日期列待填入 -->
+              <th colspan="2">05月11日<br><small>周一</small></th>
+              <th colspan="2">05月12日<br><small>周二</small></th>
+              <th colspan="2">05月13日<br><small>周三</small></th>
+              <th colspan="2">05月14日<br><small>周四</small></th>
+              <th colspan="2">05月15日<br><small>周五</small></th>
+              <th rowspan="3">时间进度</th>
+            </tr>
+            <tr>
+              <th class="sub-th">进量</th><th class="sub-th">占比</th>
+              <th class="sub-th">进量</th><th class="sub-th">占比</th>
+              <th class="sub-th">进量</th><th class="sub-th">占比</th>
+              <th class="sub-th">进量</th><th class="sub-th">占比</th>
+              <th class="sub-th">进量</th><th class="sub-th">占比</th>
+            </tr>
+          </thead>
+          <tbody id="monBody_tb">
+            <tr><td class="left">ningbohuishuo</td><td class="placeholder-cell">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td>79</td><td class="placeholder-cell">待更新%</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="placeholder-cell">-</td>
+            </tr>
+            <tr><td class="left">guangzhouzhihuicheng</td><td class="placeholder-cell">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="placeholder-cell">-</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="left">合计</td><td class="placeholder-cell">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td>79</td><td class="placeholder-cell">100%</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="placeholder-cell">-</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p style="font-size:12px;color:#666;margin-top:8px;">数据截止：2026-05-14 24:00</p>
+    </div>
+
+    <!-- 年级进量监控表 -->
+    <div class="section-card grade-section">
+      <div class="section-title">【期次】年级进量监控</div>
+      <div style="overflow-x:auto">
+        <table class="mon-table">
+          <thead>
+            <tr>
+              <th rowspan="3" class="left">渠道</th>
+              <th colspan="2">合计</th>
+              <th colspan="2">05月11日<br><small>周一</small></th>
+              <th colspan="2">05月12日<br><small>周二</small></th>
+              <th colspan="2">05月13日<br><small>周三</small></th>
+              <th colspan="2">05月14日<br><small>周四</small></th>
+              <th colspan="2">05月15日<br><small>周五</small></th>
+              <th rowspan="3">时间进度</th>
+            </tr>
+            <tr>
+              <th class="sub-th">进量</th><th class="sub-th">占比</th>
+              <th class="sub-th">高一</th><th class="sub-th">高二</th>
+              <th class="sub-th">高一</th><th class="sub-th">高二</th>
+              <th class="sub-th">高一</th><th class="sub-th">高二</th>
+              <th class="sub-th">高一</th><th class="sub-th">高二</th>
+              <th class="sub-th">高一</th><th class="sub-th">高二</th>
+            </tr>
+          </thead>
+          <tbody id="gradeBody_tb">
+            <tr>
+              <td class="left">ningbohuishuo</td>
+              <td>79</td><td class="placeholder-cell">待更新%</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td>33</td><td>29</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="placeholder-cell">-</td>
+            </tr>
+            <tr>
+              <td class="left">guangzhouzhihuicheng</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="placeholder-cell">-</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="left">合计</td>
+              <td>79</td><td>100%</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td>33</td><td>29</td>
+              <td class="zero">-</td><td class="zero">-</td>
+              <td class="placeholder-cell">-</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- 趋势图 -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>📈 每日进量趋势（期次周期）</h3>
+        <div class="chart-wrap">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>🎯 渠道占比</h3>
+        <div class="chart-wrap">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:20px;background:#f0f2f5;margin: 0 -16px;"></div>
+
+    <!-- ===== 渠道转化情况 ===== -->
+    <div class="header" style="margin: 0 -16px;">
+      <h1>📊 【期次】各渠道转化情况</h1>
+      <p>数据截止：待填入</p>
+    </div>
+
+    <div class="section-card" style="margin-top:14px;">
+      <div class="section-title">【期次】各渠道转化情况</div>
+      <div style="overflow-x:auto">
+        <table class="conv-table">
+          <thead>
+            <tr>
+              <th rowspan="2">渠道</th>
+              <th rowspan="2">进班</th>
+              <th rowspan="2">加微</th>
+              <th rowspan="2">加微率</th>
+              <th rowspan="2">主动加微</th>
+              <th rowspan="2">主动加微率</th>
+              <th rowspan="2">到课</th>
+              <th rowspan="2">到课率</th>
+              <th rowspan="2">完课</th>
+              <th rowspan="2">完课率</th>
+              <th rowspan="2">转化人头</th>
+              <th rowspan="2">人头转率</th>
+              <th rowspan="2">到课转化率</th>
+              <th rowspan="2">完课转化率</th>
+              <th rowspan="2">首转GMV</th>
+              <th rowspan="2">总例产</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="left">ningbohuishuo</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+            </tr>
+            <tr>
+              <td class="left">guangzhouzhihuicheng</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+            </tr>
+            <tr class="foot-row">
+              <td class="left">合计/均值</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+              <td class="placeholder-cell">-</td><td class="placeholder-cell">-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:12px;color:#666;margin-top:8px;">数据截止：待填入</p>
+    </div>
+
+  </div><!-- /inner container -->
+
+</div><!-- /outer container -->
+
+<script>
+// ===== 图书1元趋势图 =====
+(function(){
+  // 已知数据：5/14 ningbohuishuo=79
+  const dates = ["2026-05-11","2026-05-12","2026-05-13","2026-05-14"];
+  const dailyData = {
+    "ningbohuishuo":      [0, 0, 0, 79],
+    "guangzhouzhihuicheng": [0, 0, 0, 0]
+  };
+  const colors = ["#1a73e8","#e53935"];
+  const labels = dates.map(d=>d.slice(5));
+  const channels = Object.keys(dailyData);
+
+  // 趋势折线图
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: channels.map((ch,i)=>({
+        label: ch,
+        data: dailyData[ch],
+        borderColor: colors[i],
+        backgroundColor: colors[i]+'22',
+        tension: 0.3,
+        pointRadius: 4,
+        fill: false
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // 饼图（渠道占比）
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  const totals = channels.map(ch=>dailyData[ch].reduce((a,b)=>a+b,0));
+  new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: channels,
+      datasets: [{ data: totals, backgroundColor: colors }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
