@@ -434,7 +434,9 @@ document.getElementById('kpiTime_12').textContent = timePctStr;
 
 function getKeyTotal(k) {
   let s = 0;
-  DATA_12.allDates.forEach(d => {
+  // 只统计春12期范围内的日期（5/13 17:00开始，排除5/11和5/12）
+  const validDates = DATA_12.allDates.filter(d => d >= '2026-05-13');
+  validDates.forEach(d => {
     const dd = DATA_12.result[k] && DATA_12.result[k][d] || {};
     s += Object.values(dd).reduce((a,b)=>a+b,0);
   });
